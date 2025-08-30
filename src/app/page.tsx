@@ -3,7 +3,8 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTRPC } from "@/trpc/client";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation } from "@tanstack/react-query";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { toast } from "sonner";
 import { success } from "zod";
@@ -11,33 +12,28 @@ import { success } from "zod";
 export default function Home() {
   const[value, setValue] = useState("");
 
+  const router = useRouter()
   const trpc = useTRPC();
-  const {data: messages} = useQuery(trpc.messages.getMany.queryOptions())
-  const createMessage = useMutation(trpc.messages.create.mutationOptions({
-    onSuccess: () => {
-      toast.success("Message created successfully!");
-    },
+  const createProject = useMutation(trpc.projects.create.mutationOptions({
     onError: (err) => {
-      toast.error(`Error creating message: ${err.message}`);
+      toast.error(`Error creating project: ${err.message}`);
+    },
+    onSuccess: (data) => {
+      toast.success(`Project created successfully: ${data.id}`);
+      router.push(`/projects/${data.id}`);
     }
   }));
 
   return (
-    <div className="p-4 max-w-7xl mx-auto">
+    <div className="h-screen w-screen flex items-center justify-center">
+      <div className="max-wsc mx-auto flex w-full item-center max-w-lg flex-col gap-4">
 
       {/* just a small input box*/}
       <Input value={value} onChange={(e) => {
         setValue(e.target.value);
       }} className="resize-none h-12" />
-      <Button disabled={createMessage.isPending} onClick={() => createMessage.mutate({value:value})}>Create Message</Button>
+      <Button disabled={createProject.isPending} onClick={() => createProject.mutate({value})}>Submit</Button>
 
-      {/* display messages */}
-      <div className="mt-4">
-        {messages?.map((msg) => (
-          <div key={msg.id} className="p-2 border-b">
-            {msg.content}
-          </div>
-        ))}
       </div>
     </div>
   );
