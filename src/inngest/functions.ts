@@ -27,7 +27,7 @@ export const codeAgentFunction = inngest.createFunction(
             model: anthropic({
                 model: "claude-3-5-haiku-latest",
                 defaultParameters: {
-                    temperature: 0.5,
+                    temperature: 0.7,
                     max_tokens: 4096
                 }
             }),
@@ -355,6 +355,7 @@ export const codeAgentFunction = inngest.createFunction(
             if (isError) {
                 return await prisma.message.create({
                     data: {
+                        projectId: event.data.projectId,
                         content: "Error occurred",
                         role: "ASSISTANT",
                         type: "ERROR"
@@ -363,8 +364,9 @@ export const codeAgentFunction = inngest.createFunction(
             }
             return await prisma.message.create({
                 data: {
+                    projectId: event.data.projectId,
                     content: result.state.data.summary,
-                    role: "USER",
+                    role: "ASSISTANT",
                     type: "RESULT",
                     Fragment: {
                         create: {
