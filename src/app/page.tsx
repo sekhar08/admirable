@@ -3,7 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useTRPC } from "@/trpc/client";
-import { useMutation } from "@tanstack/react-query";
+import { useMutation, useQuery } from "@tanstack/react-query";
 import { useState } from "react";
 import { toast } from "sonner";
 import { success } from "zod";
@@ -12,12 +12,13 @@ export default function Home() {
   const[value, setValue] = useState("");
 
   const trpc = useTRPC();
-  const invoke = useMutation(trpc.invoke.mutationOptions({
+  const {data: messages} = useQuery(trpc.messages.getMany.queryOptions())
+  const createMessage = useMutation(trpc.messages.create.mutationOptions({
     onSuccess: () => {
-      toast.success("Background job invoked! Check your terminal after a few seconds.");
+      toast.success("Message created successfully!");
     },
     onError: (err) => {
-      toast.error(`Error invoking background job: ${err.message}`);
+      toast.error(`Error creating message: ${err.message}`);
     }
   }));
 
@@ -28,8 +29,16 @@ export default function Home() {
       <Input value={value} onChange={(e) => {
         setValue(e.target.value);
       }} className="resize-none h-12" />
-      <Button disabled={invoke.isPending} onClick={() => invoke.mutate({value:value})}>Invoke Background Job</Button>
+      <Button disabled={createMessage.isPending} onClick={() => createMessage.mutate({value:value})}>Create Message</Button>
 
+      {/* display messages */}
+      <div className="mt-4">
+        {messages?.map((msg) => (
+          <div key={msg.id} className="p-2 border-b">
+            {msg.content}
+          </div>
+        ))}
+      </div>
     </div>
   );
 }
